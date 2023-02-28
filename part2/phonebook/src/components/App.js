@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react'
 import Persons from './Persons'
 import PersonForm from './PersonForm'
 import Filter from './Filter'
+import Notification from './Notification'
 import phonebookService from '../services/phonebook'
-
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchPattern, setSearchPattern] = useState('')
-
+  const [displayMessage, setDisplayMessage] = useState({})
   const hook = () => {
     phonebookService
       .getAll()
@@ -19,7 +19,12 @@ const App = () => {
       })
   }
   useEffect(hook, [])
-
+  const cleanupAdd = (message, className) => {
+    setNewName('')
+    setNewNumber('')
+    setDisplayMessage({message, className})
+    setTimeout(() => setDisplayMessage(null), 5000)
+  }
   const addPerson = (event) => {
     event.preventDefault()
     let foundPerson = persons.find(p => p.name.toUpperCase() === newName.toUpperCase())
@@ -33,17 +38,19 @@ const App = () => {
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
         })
-      setNewName('')
-      setNewNumber('')
-    } else if (window.confirm(`${newName} is already in the phonebook. Replace the old number?`)) {
+      cleanupAdd(`${newName} has been added to the phonebook.`, 'success')
+      
+    } else if (window.confirm(`${foundPerson.name} is already in the phonebook. Replace the old number?`)) {
       const personObject = { ...foundPerson, number: newNumber }
       phonebookService
         .update(personObject.id, personObject)
         .then(returnedPerson => {
           setPersons(persons.map(p => p.id !== personObject.id ? p : returnedPerson))
         })
-      setNewName('')
-      setNewNumber('')
+        .catch(error => {
+          cleanupAdd(`${foundPerson.name}'s information has been deleted.`, 'error')
+        })
+      cleanupAdd(`${foundPerson.name}'s number has been updated in the phonebook.`, 'success')
     }
   }
 
@@ -65,6 +72,7 @@ const App = () => {
   }
   return (
     <div>
+      <Notification {...displayMessage}/>
       <Filter value={searchPattern} onChange={handleFilterChange} />
       <h2>Phonebook</h2>
       <PersonForm {...formProps} />

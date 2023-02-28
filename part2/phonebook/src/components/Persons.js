@@ -14,7 +14,6 @@ const Persons = ({persons, handleDeleteOf}) => {
     </table>
   )
 }
-
 const Person = ({name, number, handleDelete}) => {
   return (
     <tr>
