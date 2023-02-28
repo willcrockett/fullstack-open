@@ -1,46 +1,61 @@
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import Persons from './Persons'
 import PersonForm from './PersonForm'
 import Filter from './Filter'
-import axios from 'axios'
+import phonebookService from '../services/phonebook'
+
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [searchPattern, setSearchPattern] = useState('')
-  const namesRef = useRef(new Set())
 
   const hook = () => {
-    axios
-    .get('http://localhost:3001/persons')
-    .then(response => {
-      setPersons(response.data)
-      response.data.map(
-        person => namesRef.current = new Set(namesRef.current).add(person.name.toUpperCase())
-      )
-    })
+    phonebookService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
+      })
   }
   useEffect(hook, [])
+
   const addPerson = (event) => {
     event.preventDefault()
-    if (!namesRef.current.has(newName.toUpperCase())) {
+    let foundPerson = persons.find(p => p.name.toUpperCase() === newName.toUpperCase())
+    if (!foundPerson) {
       const personObject = {
         name: newName,
         number: newNumber,
       }
-      setPersons(persons.concat(personObject))
-      namesRef.current = namesRef.current.add(newName)
+      phonebookService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+        })
       setNewName('')
       setNewNumber('')
-    } else {
-      alert(`${newName} is already in the phonebook.`)
+    } else if (window.confirm(`${newName} is already in the phonebook. Replace the old number?`)) {
+      const personObject = { ...foundPerson, number: newNumber }
+      phonebookService
+        .update(personObject.id, personObject)
+        .then(returnedPerson => {
+          setPersons(persons.map(p => p.id !== personObject.id ? p : returnedPerson))
+        })
+      setNewName('')
+      setNewNumber('')
     }
   }
 
-  const handleNameChange = (event) => setNewName(event.target.value)
-  const handleNumberChange = (event) => setNewNumber(event.target.value)
-  const handleFilterChange = (event) => setSearchPattern(event.target.value)
+  const handleNameChange = event => setNewName(event.target.value)
+  const handleNumberChange = event => setNewNumber(event.target.value)
+  const handleFilterChange = event => setSearchPattern(event.target.value)
+  const handleDeleteOf = id => {
+    if (window.confirm(`Delete ${id}?`)) {
+      phonebookService.remove(id)
+      setPersons(persons.filter(p => p.id !== id))
+    }
+  }
   const formProps = {
     addPerson: addPerson,
     newName: newName,
@@ -50,13 +65,14 @@ const App = () => {
   }
   return (
     <div>
-      <Filter value={searchPattern} onChange={handleFilterChange}/>
-      <h2>Phonebook</h2>   
-      <PersonForm {...formProps}/>
+      <Filter value={searchPattern} onChange={handleFilterChange} />
+      <h2>Phonebook</h2>
+      <PersonForm {...formProps} />
       <h2>Numbers</h2>
-      <Persons persons={persons.filter(person => 
-        person.name.toUpperCase().includes(searchPattern.toUpperCase())
-      )} />
+      <Persons
+        persons={persons.filter(person => person.name.toUpperCase().includes(searchPattern.toUpperCase()))}
+        handleDeleteOf={handleDeleteOf}
+      />
     </div>
   )
 }
