@@ -1,0 +1,14 @@
+{
+  "name": "backend",
+  "version": "0.0.1",
+  "description": "---- **This is a personal project. I'm not a student at University of Helsinki**<br> Course designed by the University of Helsinki as an introduction to modern web development The main focus of the curriculum is on building single-page applications with ReactJS and REST APIs built with Node.js",
+  "main": "index.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
