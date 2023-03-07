@@ -2,31 +2,33 @@ const Countries = ({ countries, handleShowOf, weather }) => {
   console.log('countries 1')
   
   if (countries) {    
-    console.log('countries 2')
     if (countries.length > 10) {
-      return <p>Too many results. Try a different filter.</p>
+      return <p>Too many results. Try another filter.</p>
     } else if (countries.length > 1) {
       console.log('countries 3')
         return (
           <CountryList countries={countries} handleShowOf={handleShowOf} />
         )
     } else {
-      console.log('countries 4')
+      console.log('countries 4, weather:', weather)
         return <Country 
-        {...countries[0]}
+        country={countries[0]}
         weatherInfo={weather} />
     }
   }
 }
 
 const Country = ({
-  capital,
-  area,
-  languages,
-  name: { common: name},
-  flags: {png: flag},
-  weather
+  country,
+  weatherInfo
 }) => {
+  const {
+    capital,
+    area,
+    languages,
+    name: { common: name},
+    flags: { png: flag }
+  } = country
   console.log('COUNTRY 1')
   return (
     <div>
@@ -39,7 +41,7 @@ const Country = ({
       )}
       <br></br>
       <img src={flag}/>
-        <Weather capital={capital} weather={weather} />
+        <Weather capital={capital} weatherInfo={weatherInfo} />
     </div>
   
       
@@ -51,11 +53,12 @@ const Country = ({
 const CountryList = ({countries, handleShowOf}) => {
   console.log('country list')
   return ( countries.map(({name: {official, common}}, index) => {
+      
       return (
-         <div key={index}>
+         <li key={index}>
           {`${common}  `}
           <button onClick={() => handleShowOf(official)}>show</button>
-         </div>
+         </li>
       );
     })
   )
@@ -68,10 +71,10 @@ const Weather = ({ capital, weatherInfo }) => {
     console.log('weather 2')
     const { 
       main: { temp },
-      weather: { icon },
+      weather,
       wind: { speed } 
     } = weatherInfo
-    const weatherIcon = `http://openweathermap.org/img/wn/${icon}@2x.png`
+    const weatherIcon = `http://openweathermap.org/img/wn/${weather[0].icon}@2x.png`
     return (
       <div>
         <h2>Weather in {capital}</h2>
@@ -81,7 +84,7 @@ const Weather = ({ capital, weatherInfo }) => {
       </div> 
     )
   }
-  console.log('weather 3')
+  console.log('weather 3 ')
   return null
 }
 
