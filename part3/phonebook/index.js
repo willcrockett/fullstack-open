@@ -31,7 +31,7 @@ let persons = [
   }
 ]
 
-
+const generateId = () => Math.floor(Math.random * 10000)
 /* -------------------------------------------------------------------------- */
 /*                               RESTful Routes                               */
 /* -------------------------------------------------------------------------- */
@@ -58,6 +58,39 @@ app.get('/api/persons/:id', (request, response) => {
   } else{
     response.status(404).end()
   }
+})
+
+/* --------------------- 3.4 Route: DELETE person by id --------------------- */
+app.delete('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id)
+  console.log('delete')
+  
+  persons = persons.filter(p => p.id !== id)
+  response.status(204).end()
+})
+
+/* ----------------------- 3.5 Route: POST new person ----------------------- */
+app.post('/api/persons/:id', (request, response) => {
+  const body = request.body
+
+  if (!body.name) {
+    return response.status(404).json({
+      error: 'name missing'
+    })
+  } else if (!body.number) {
+    return response.status(404).json({
+      error: 'number missing'
+    })
+  }
+
+  const id = generateId()
+  const person = {
+    name: body.name,
+    number: body.number
+  }
+  console.log(person)
+  
+  
 })
 /* -------------------------------------------------------------------------- */
 /* ------------------------------- Server shit ------------------------------ */
