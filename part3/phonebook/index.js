@@ -31,7 +31,7 @@ let persons = [
   }
 ]
 
-const generateId = () => Math.floor(Math.random * 10000)
+const generatxeId = () => Math.floor(Math.random * 10000)
 /* -------------------------------------------------------------------------- */
 /*                               RESTful Routes                               */
 /* -------------------------------------------------------------------------- */
@@ -78,8 +78,12 @@ app.post('/api/persons/:id', (request, response) => {
       error: 'name missing'
     })
   } else if (!body.number) {
-    return response.status(404).json({
+    return response.status(400).json({
       error: 'number missing'
+    })
+  } else if (persons.some(p => p.name.toUpperCase() == body.name.toUpperCase())) {
+    return response.status(400).json({
+      error: 'Name must be unique'
     })
   }
 
@@ -89,8 +93,7 @@ app.post('/api/persons/:id', (request, response) => {
     number: body.number
   }
   console.log(person)
-  
-  
+
 })
 /* -------------------------------------------------------------------------- */
 /* ------------------------------- Server shit ------------------------------ */

@@ -28,7 +28,34 @@ Content-Type: application/json
 }
 
 ###
-//3.4: BAD POST new person 
+//3.4: BAD POST new person: no body
 POST http://localhost:3001/api/persons/1/
 Content-Type: application/json
 
+###
+//3.6: BAD POST new person: no name
+POST http://localhost:3001/api/persons/1/
+Content-Type: application/json
+
+{
+  "number": "101-101-6969"
+}
+
+###
+//3.6: BAD POST new person: no number
+POST http://localhost:3001/api/persons/1/
+Content-Type: application/json
+
+{
+  "name": "some dude"
+}
+
+###
+//3.6: BAD POST new person: existing name
+POST http://localhost:3001/api/persons/1/
+Content-Type: application/json
+
+{
+  "name": "arto hellas",
+  "number": "22"
+}
