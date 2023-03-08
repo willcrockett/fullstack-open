@@ -36,18 +36,29 @@ let persons = [
 /*                               RESTful Routes                               */
 /* -------------------------------------------------------------------------- */
 
-/* ----------------------------- GET All Persons ---------------------------- */
+/* ----------------------- 3.1 Route: GET all persons ----------------------- */
 app.get('/api/persons', (request, response) => {
   response.json(persons)
 })
 
-/* -------------------------------- GET Info -------------------------------- */
+/* ------------------------ 3.2 Route: GET info page ------------------------ */
 app.get('/info', (request, response) => {
   const infoBody = `<p>Phonebook has info for ${persons.length} people</p>
                     <p>${new Date()}</p>`
   response.send(infoBody)
 })
 
+/* ----------------------- 3.3: route GET person by id ---------------------- */
+app.get('/api/persons/:id', (request, response) => {
+  const id = Number(request.params.id)
+  const person = persons.find(n => n.id === id)
+  console.log(person)
+  if (person) {
+    response.json(person)
+  } else{
+    response.status(404).end()
+  }
+})
 /* -------------------------------------------------------------------------- */
 /* ------------------------------- Server shit ------------------------------ */
 const PORT = 3001
