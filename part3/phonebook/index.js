@@ -41,6 +41,12 @@ app.get('/api/persons', (request, response) => {
   response.json(persons)
 })
 
+/* -------------------------------- GET Info -------------------------------- */
+app.get('/info', (request, response) => {
+  const infoBody = `<p>Phonebook has info for ${persons.length} people</p>
+                    <p>${new Date()}</p>`
+  response.send(infoBody)
+})
 
 /* -------------------------------------------------------------------------- */
 /* ------------------------------- Server shit ------------------------------ */
