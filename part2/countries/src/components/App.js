@@ -34,7 +34,7 @@ const App = () => {
 
   useEffect(() => {
     console.log('countries effect: begin')
-    if (countries && countries.length == 1) {
+    if (countries && countries.length === 1) {
       console.log('countries effect: single country')
       const capital = countries[0].capital[0]
       openweather

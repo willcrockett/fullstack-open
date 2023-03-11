@@ -4,8 +4,24 @@
 
 /* -------------------------------- Libraries ------------------------------- */
 const express = require('express')
+const morgan = require('morgan')
 const app = express()
+
+
 app.use(express.json())
+
+morgan.token('body', req => {
+  return JSON.stringify(req.body)
+})
+const tiny = ':method :url :status :res[content-length] - :response-time ms'
+app.use(morgan(tiny + ' :body', { 
+  skip: (req, res) => req.method.toString() !== 'POST' 
+  })
+)
+app.use(morgan(tiny, { 
+  skip: (req, res) => req.method.toString() === 'POST' 
+  })
+)
 
 /* ---------------------------- Helpers and Data ---------------------------- */
 let persons = [
@@ -31,7 +47,7 @@ let persons = [
   }
 ]
 
-const generatxeId = () => Math.floor(Math.random * 10000)
+const generateId = () => Math.floor(Math.random() * 10000)
 /* -------------------------------------------------------------------------- */
 /*                               RESTful Routes                               */
 /* -------------------------------------------------------------------------- */
@@ -87,12 +103,15 @@ app.post('/api/persons/:id', (request, response) => {
     })
   }
 
-  const id = generateId()
+  const newId = generateId()
   const person = {
+    id: newId,
     name: body.name,
     number: body.number
   }
   console.log(person)
+  persons = persons.concat(person)
+  response.json(person)
 
 })
 /* -------------------------------------------------------------------------- */

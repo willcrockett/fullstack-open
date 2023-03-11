@@ -32,7 +32,7 @@ const Country = ({
   console.log('COUNTRY 1')
   return (
     <div>
-      <h1>{name}</h1>
+      <h1 class='countrytitle'>{name}</h1>
       <p>{`Capital: ${capital}`}</p>
       <p>{`Area: ${area}`}</p>
       <h3>Languages</h3>
@@ -49,6 +49,7 @@ const Country = ({
   // const name = country.name.official
   // const [capital, area, languages, flags, ...rest] = country
 }
+ 
 
 const CountryList = ({countries, handleShowOf}) => {
   console.log('country list')
