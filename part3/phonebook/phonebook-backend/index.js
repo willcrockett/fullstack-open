@@ -7,11 +7,9 @@ const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
 const app = express()
-
-
 app.use(express.json())
 app.use(cors())
-morgan.token('req_body', req => {
+morgan.token('body', req => {
   return JSON.stringify(req.body)
 })
 const tiny = ':method :url :status :res[content-length] - :response-time ms'
@@ -89,7 +87,7 @@ app.delete('/api/persons/:id', (request, response) => {
 })
 
 /* ----------------------- 3.5 Route: POST new person ----------------------- */
-app.post('/api/persons/:id', (request, response) => {
+app.post('/api/persons', (request, response) => {
   const body = request.body
 
   if (!body.name) {
