@@ -20,7 +20,7 @@ DELETE {{baseUrl}}/api/persons/1/
 
 ###
 //3.4: GOOD POST new person
-POST {{baseUrl}}/api/persons/1/
+POST {{baseUrl}}/api/persons
 Content-Type: application/json
 
 {
