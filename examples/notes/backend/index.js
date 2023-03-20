@@ -1,25 +1,30 @@
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
 const app = express()
 
 
-/**
- * * You can use multple middleware at the same time. They get run in the order express took them in.
- * * Express takes in middleware like so:
- *  app.use(middleWare)
- * * Middleware functions have to be taken into express before routes are defined for them to run
- * * before route event handlers are ran. However, sometimes the middleware should be ran after
- * * the route event handlers, in which case express should take them in after the routes.
- * * A middleware is a function with 3 parameters
- */
+if (process.argv.length < 3) {
+  console.log("Give database password as argument")
+  process.exit(1) 
+}
+
+const password = process.argv[2]
+
+const url = 
+`mongodb+srv://willccrockett:${password}@cluster0.yr4iutr.mongodb.net/noteApp?retryWrites=true&w=majority`
+
+mongoose.set('strictQuery', false)
+mongoose.connect(url)
+
+const noteSchema = new mongoose.Schema({
+  content: String,
+  important: Boolean,
+})
+
+const Note = mongoose.model('Note', noteSchema)
+
 /* ------------------------------- Middleware ------------------------------- */
-/**
- * requestLogger
- * * Prints info about every request sent to server
- * @param request The request sent to server
- * @param response The response sent to client
- * @param next Function that yields to the next middleware
- */
 const requestLogger = (request, response, next) => {
   console.log('Method:', request.method)
   console.log('Path:  ', request.path)
@@ -78,24 +83,6 @@ app.use(cors())
  */
 
 
-let notes = [
-  {
-    id: 1,
-    content: "HTML is easy",
-    important: true
-  },
-  {
-    id: 2,
-    content: "Browser can execute only JavaScript",
-    important: false
-  },
-  {
-    id: 3,
-    content: "GET and POST are the most important methods of HTTP protocol",
-    important: true
-  }
-]
-
 const generateId = () => {
   const maxId = notes.length > 0
   ? Math.max(...notes.map(n=>n.id)) // ?
@@ -129,13 +116,9 @@ app.get('/', (request, response) => {
 
 /* ------------------------------ GET All Notes ----------------------------- */
 app.get('/api/notes/', (request, response) => {
-  response.json(notes) 
-  /**
-   * response.json(x) sends a json formatted string derived from object x with
-   * Content-Type header automatically set to application/json
-   * 
-   * If we were still using base node, we'd have to do response.end(JSON.stringify(notes)) instead
-   */
+  Note.find({}).then(notes => {
+    response.json(notes)
+  })
 })
 
 /* ---------------------------- GET Specific note --------------------------- */
