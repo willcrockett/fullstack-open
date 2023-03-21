@@ -1,30 +1,11 @@
+require('dotenv').config()
 const express = require('express')
-const cors = require('cors')
-const mongoose = require('mongoose')
 const app = express()
-
-
-if (process.argv.length < 3) {
-  console.log("Give database password as argument")
-  process.exit(1) 
-}
-
-const password = process.argv[2]
-
-const url = 
-`mongodb+srv://willccrockett:${password}@cluster0.yr4iutr.mongodb.net/noteApp?retryWrites=true&w=majority`
-
-mongoose.set('strictQuery', false)
-mongoose.connect(url)
-
-const noteSchema = new mongoose.Schema({
-  content: String,
-  important: Boolean,
-})
-
-const Note = mongoose.model('Note', noteSchema)
-
-/* ------------------------------- Middleware ------------------------------- */
+const Note = require('./models/Note')
+const cors = require('cors')
+/* -------------------------------------------------------------------------- */
+/*                                 Middleware                                 */
+/* -------------------------------------------------------------------------- */
 const requestLogger = (request, response, next) => {
   console.log('Method:', request.method)
   console.log('Path:  ', request.path)
@@ -38,49 +19,16 @@ const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
 
-
 app.use(express.json())
-/** enables json-parser.
-  * * json-parser transforms json data recieved in requets into javascript
-  * * objects and attaches it to body property of request object before
-  * * route handler is called
-  * * json-parser is a 'middleware'. Middleware are functions that handle
-  * * request and response objects
-  */
 app.use(requestLogger)
-/** Express notes
- * Express is the most popular node library that aims
- * to make server-side development in Node easier than
- * working with node's built-in http module by providing
- * better abstractions
- * 
- * Its source code is found in node_modules directory, along with
- * any the source code for any other dependecies, including
- * dependencies express itself may have 
- * (called transiitve dependencies
- * 
- * dependecy listed in package.json like so:
- *  "express": "^4.18.2" (major.minor.patch)
- * the carat (^) means when dependencies of server
- * are installed, express version will be at least
- * 4.18.2, but the patch number (2) and minor number (18) can be
- * larger. However, the major number (4) must be exactly as listed
- * 
- * Update all dependencies with:
- *  npm update
- * When working on project in new environment, install all
- * dependencies needed with:
- *  npm install
- */
 app.use(express.static('build'))
 app.use(cors())
+
+
 /* -------------------------------------------------------------------------- */
 /*                               Helper and Data                              */
 /* -------------------------------------------------------------------------- */
-/** 
- * Primary purpose of the backend server in this course is to send
- * raw json data to the frontend, so we define the json here
- */
+
 
 
 const generateId = () => {
@@ -88,8 +36,8 @@ const generateId = () => {
   ? Math.max(...notes.map(n=>n.id)) // ?
   : 0
   /**
-   * ? max finds the max of any amount of invididual numbers passed into it, but it doesnt work on arrays
-   * ? ...notes transforms notes array into invidual numbers
+   * ? max finds the max of any amount of individual numbers passed into it, but it doesn't work on arrays
+   * ? ...notes transforms notes array into individual numbers
    */
   return maxId + 1
 }
@@ -102,11 +50,6 @@ const generateId = () => {
 
 /* -------------------------------- GET Root -------------------------------- */
 app.get('/', (request, response) => {
-  /**¸
-   * Event handler takes two params: request, response
-   *  request: All of the information of the HTTP GET request
-   *  response: used to define how the the request is responded to
-   */
   response.send('<h1>Hello World!</h1>') 
   /** 
    * * Since send parameter is a string, express automatically
@@ -155,8 +98,7 @@ app.post('/api/notes', (request, response) => {
 
 app.use(unknownEndpoint)
 /* -------------------------------------------------------------------------- */
-
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
