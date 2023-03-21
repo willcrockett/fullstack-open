@@ -74,8 +74,8 @@ app.get('/api/notes/:id', (request, response) => {
 app.delete('/api/notes/:id', (request, response) => {
   Note.
 
-  response.status(204).end() /* no clear precendent for status code for failed delete
-                              only two options 204 and 404. using 204 for F&S for simpliciity */
+  response.status(204).end() /* no clear precedent for status code for failed delete
+                              only two options 204 and 404. using 204 for F&S for simplicity */
 })
 
 /* ------------------------------ POST new note ----------------------------- */

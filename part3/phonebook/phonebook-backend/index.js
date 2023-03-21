@@ -1,17 +1,19 @@
-/* -------------------------------------------------------------------------- */
-/*                                  Constants                                 */
-/* -------------------------------------------------------------------------- */
 
-/* -------------------------------- Libraries ------------------------------- */
+/* -------------------------------- Imports and Constants ------------------------------- */
+require('dotenv').config()
 const express = require('express')
+const app = express()
+const Person = require('./modules/person')
 const morgan = require('morgan')
 const cors = require('cors')
-const app = express()
+
+/* ------------------------------- Middleware ------------------------------- */
 app.use(express.json())
 app.use(cors())
 morgan.token('body', req => {
   return JSON.stringify(req.body)
 })
+
 const tiny = ':method :url :status :res[content-length] - :response-time ms'
 app.use(morgan(tiny + '\nrequest body\n\t :body\n', { 
   skip: (req, res) => req.method.toString() !== 'POST' 
@@ -19,10 +21,6 @@ app.use(morgan(tiny + '\nrequest body\n\t :body\n', {
 )
 app.use(express.static('build'))
 
-app.use(morgan(tiny, { 
-  skip: (req, res) => req.method.toString() === 'POST' 
-  })
-)
 
 /* ---------------------------- Helpers and Data ---------------------------- */
 let persons = [
@@ -55,7 +53,7 @@ const generateId = () => Math.floor(Math.random() * 10000)
 
 /* ----------------------- 3.1 Route: GET all persons ----------------------- */
 app.get('/api/persons', (request, response) => {
-  response.json(persons)
+  Person.find({}).then(persons => response.json(persons))
 })
 
 /* ------------------------ 3.2 Route: GET info page ------------------------ */
@@ -67,14 +65,8 @@ app.get('/info', (request, response) => {
 
 /* ----------------------- 3.3: route GET person by id ---------------------- */
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(n => n.id === id)
-  console.log(person)
-  if (person) {
-    response.json(person)
-  } else{
-    response.status(404).end()
-  }
+  Person.findById(request.params.id)
+        .then(person => response.json(person))
 })
 
 /* --------------------- 3.4 Route: DELETE person by id --------------------- */
@@ -104,15 +96,16 @@ app.post('/api/persons', (request, response) => {
     })
   }
 
-  const newId = generateId()
-  const person = {
-    id: newId,
+  const person = new Person({
     name: body.name,
     number: body.number
-  }
-  console.log(person)
-  persons = persons.concat(person)
-  response.json(person)
+  })
+
+  person.save()
+        .then(savedPerson => {
+          console.log('Person saved to MongoDB')
+          response.json(savedPerson)
+        })
 
 })
 /* -------------------------------------------------------------------------- */
