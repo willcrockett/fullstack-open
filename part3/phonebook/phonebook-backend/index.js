@@ -42,9 +42,12 @@ app.get('/api/persons', (req, res) => {
 
 /* ------------------------ 3.2 Route: GET info page ------------------------ */
 app.get('/info', (req, res) => {
-  const infoBody = `<p>Phonebook has info for ${persons.length} people</p>
-                    <p>${new Date()}</p>`
-  res.send(infoBody)
+  Person.count({})
+        .then(personCount => {
+                const infoBody = `<p>Phonebook has info for ${personCount} people</p>
+                                  <p>${new Date()}</p>`
+                res.send(infoBody)
+  })
 })
 
 /* ----------------------- 3.3: route GET person by id ---------------------- */
@@ -89,12 +92,13 @@ app.post('/api/persons', (req, res) => {
         })
 })
 
+/* ------------------------------ Update Person ----------------------------- */
 app.put('/api/persons/:id', update)
 
 const unknownEndpoint = (req, res) => {
   res.status(404).send({ error: 'unknown endpoint' })
 }
-app.use(unknownEndpoint)
+
 const errorHandler = (error, req, res, next) => {
   console.error(error.message)
   if (error.name === 'CastError') {
@@ -102,6 +106,8 @@ const errorHandler = (error, req, res, next) => {
   }
   next(error)
 }
+
+app.use(unknownEndpoint)
 app.use(errorHandler)
 
 /* -------------------------------------------------------------------------- */
