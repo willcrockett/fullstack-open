@@ -100,13 +100,12 @@ app.post('/api/persons', (request, response) => {
     name: body.name,
     number: body.number
   })
-
+  
   person.save()
         .then(savedPerson => {
           console.log('Person saved to MongoDB')
           response.json(savedPerson)
         })
-
 })
 /* -------------------------------------------------------------------------- */
 /* ------------------------------- Server shit ------------------------------ */
