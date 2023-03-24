@@ -24,7 +24,6 @@ const errorHandler = (error, request, response, next) => {
   next(error)
 }
 
-// middleware that catches requests made to nonexistent routes
 const unknownEndpoint = (request, response) => {
   response.status(404).send({ error: 'unknown endpoint' })
 }
@@ -34,32 +33,9 @@ app.use(requestLogger)
 app.use(express.static('build'))
 app.use(cors())
 
-
-
-/* -------------------------------------------------------------------------- */
-/*                               Helper and Data                              */
-/* -------------------------------------------------------------------------- */
-
-
-
-const generateId = () => {
-  const maxId = notes.length > 0
-  ? Math.max(...notes.map(n=>n.id)) // ?
-  : 0
-  /**
-   * ? max finds the max of any amount of individual numbers passed into it, but it doesn't work on arrays
-   * ? ...notes transforms notes array into individual numbers
-   */
-  return maxId + 1
-}
-
-
-
 /* -------------------------------------------------------------------------- */
 /*                                   Routes                                   */
 /* -------------------------------------------------------------------------- */
-
-/* -------------------------------- GET Root -------------------------------- */
 
 /* ------------------------------ GET All Notes ----------------------------- */
 app.get('/api/notes/', (request, response) => {
