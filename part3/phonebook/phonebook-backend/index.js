@@ -26,7 +26,11 @@ const update = (req, res, next) => {
     number: req.body.number,
   }
 
-  Person.findByIdAndUpdate(req.params.id, person, { new: true })
+  Person.findByIdAndUpdate(req.params.id, person, { 
+    new: true, 
+    runValidators: true, 
+    context: 'query' 
+  })
         .then(updatedPerson => res.json(updatedPerson))
         .catch(error => next(error))
 }
@@ -65,18 +69,12 @@ app.delete('/api/persons/:id', (req, res, next) => {
 })
 
 /* ----------------------- 3.5 Route: POST new person ----------------------- */
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
   const body = req.body
 
-  if (!body.name) {
-    return res.status(400).json({
-      error: 'name missing'
-    })
-  } else if (!body.number) {
-    return res.status(400).json({
-      error: 'number missing'
-    })
-  } else if (persons.some(p => p.name.toUpperCase() == body.name.toUpperCase())) {
+  if (Person.find( 
+     { "name": { $regex: new RegExp(`^` + body.name + '$', "i") } }
+    )) {
     app.put('/api/persons/:id', update)
   }
 
@@ -90,6 +88,7 @@ app.post('/api/persons', (req, res) => {
           console.log('Person saved to MongoDB')
           res.json(savedPerson)
         })
+        .catch(error => next(error))
 })
 
 /* ------------------------------ Update Person ----------------------------- */
@@ -103,6 +102,8 @@ const errorHandler = (error, req, res, next) => {
   console.error(error.message)
   if (error.name === 'CastError') {
     res.status(400).send('malformed id')
+  } else if (error.name === 'ValidationError') {
+    return res.status(400).json( { error: error.message })
   }
   next(error)
 }

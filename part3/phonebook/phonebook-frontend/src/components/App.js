@@ -23,6 +23,8 @@ const App = () => {
     setNewName('')
     setNewNumber('')
     setDisplayMessage({message, className})
+    console.log(message, className)
+    
     setTimeout(() => setDisplayMessage(null), 5000)
   }
   const addPerson = (event) => {
@@ -38,6 +40,9 @@ const App = () => {
         .then(returnedPerson => {
           setPersons(persons.concat(returnedPerson))
         })
+        .catch(error => {
+          cleanupAdd(error.response.data.error, 'error')
+        })
       cleanupAdd(`${newName} has been added to the phonebook.`, 'success')
       
     } else if (window.confirm(`${foundPerson.name} is already in the phonebook. Replace the old number?`)) {
@@ -48,7 +53,7 @@ const App = () => {
           setPersons(persons.map(p => p.id !== personObject.id ? p : returnedPerson))
         })
         .catch(error => {
-          cleanupAdd(`${foundPerson.name}'s information has been deleted.`, 'error')
+          cleanupAdd(error.response.data.error, 'error')
         })
       cleanupAdd(`${foundPerson.name}'s number has been updated in the phonebook.`, 'success')
     }
