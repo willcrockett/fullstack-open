@@ -9,7 +9,6 @@ const create = newObject => {
 }
 
 const remove = id => {
-  debugger
   return axios.delete(`${baseUrl}/${id}`)
 }
 
