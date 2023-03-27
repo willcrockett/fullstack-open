@@ -1,6 +1,5 @@
 const Notification = ({ message, className }) => {
-  debugger
-  if (message) {
+    if (message) {
     return (
       <div className={className}>
         {message}
