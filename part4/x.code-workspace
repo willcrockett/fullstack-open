@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "bloglist/bloglist-backend"
+		},
+		{
+			"path": "../common/common-backend"
+		}
+	],
+	"settings": {}
+}
