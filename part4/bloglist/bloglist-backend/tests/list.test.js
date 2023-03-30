@@ -47,7 +47,7 @@ const listWithManyBlogs = [
 		url: 'http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html',
 		likes: 2,
 		__v: 0
-	}  
+	}
 ] // 36 likes, max likes 12
 const listWithOneBlog = [
 	{
@@ -78,7 +78,7 @@ describe('favorite blog', () => {
 		expect(listHelper.favoriteBlog(listWithOneBlog)).toEqual({
 			title: 'Go To Statement Considered Harmful',
 			author: 'Edsger W. Dijkstra',
-			likes: 5,
+			likes: 5
 		})
 	})
 
@@ -86,7 +86,7 @@ describe('favorite blog', () => {
 		expect(listHelper.favoriteBlog(listWithManyBlogs)).toEqual({
 			title: 'Canonical string reduction',
 			author: 'Edsger W. Dijkstra',
-			likes: 12,
+			likes: 12
 		})
 	})
 })
