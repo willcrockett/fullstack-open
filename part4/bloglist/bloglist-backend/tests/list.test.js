@@ -89,4 +89,20 @@ describe('favorite blog', () => {
 			likes: 12
 		})
 	})
+
+	describe('most blogs', () => {
+		test('when list has >1 blog, equals object with max blog author and author blog count', () => {
+			expect(listHelper.mostBlogs(listWithManyBlogs)).toEqual({
+				author: 'Robert C. Martin',
+				blogs: 3
+			})
+		})
+
+		test('when list has only one blog, equals that author and blogs = 1', () => {
+			expect(listHelper.mostBlogs(listWithOneBlog)).toEqual({
+				author: 'Edsger W. Dijkstra',
+				blogs: 1
+			})
+		})
+	})
 })
