@@ -24,8 +24,27 @@ const mostBlogs = (blogs) => {
 	let maxAuth = _.maxBy(_.keys(result), (auth) => result[auth])
 	return { author: maxAuth, blogs: result[maxAuth] }
 }
+
+const mostLikes = (blogs) => {
+	let ans = _.reduce(
+		blogs,
+		(result, blog) => {
+			let auth = blog.author
+			result[auth] = {
+				author: auth,
+				likes: blog.likes + (result[auth] ? result[auth].likes : 0)
+			}
+			return result
+		},
+		{}
+	)
+	ans = _.maxBy(_.flatMap(ans), 'likes')
+	return ans
+}
+
 module.exports = {
 	totalLikes,
 	favoriteBlog,
-	mostBlogs
+	mostBlogs,
+	mostLikes
 }

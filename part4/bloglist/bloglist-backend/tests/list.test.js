@@ -105,4 +105,20 @@ describe('favorite blog', () => {
 			})
 		})
 	})
+
+	describe('most likes', () => {
+		test('when list has >1 blog, equals author with most total likes', () => {
+			expect(listHelper.mostLikes(listWithManyBlogs)).toEqual({
+				author: 'Edsger W. Dijkstra',
+				likes: 17
+			})
+		})
+
+		test('when list has only one blog, equals that author and likes', () => {
+			expect(listHelper.mostLikes(listWithOneBlog)).toEqual({
+				author: 'Edsger W. Dijkstra',
+				likes: 5
+			})
+		})
+	})
 })
