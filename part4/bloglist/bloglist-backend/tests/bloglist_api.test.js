@@ -12,25 +12,54 @@ describe('when there is initially some saved blogs', () => {
 		await Blog.insertMany(helper.initialBlogs)
 	})
 
-	test('all blogs returned in json format', async () => {
-		await api
-			.get('/api/blogs')
-			.expect(200)
-			.expect('Content-Type', /application\/json/)
+	describe('viewing all blogs', () => {
+		test('all blogs returned in json format', async () => {
+			await api
+				.get('/api/blogs')
+				.expect(200)
+				.expect('Content-Type', /application\/json/)
+		})
+
+		test('all blogs are returned', async () => {
+			const res = await api.get('/api/blogs')
+
+			expect(res.body).toHaveLength(helper.initialBlogs.length)
+		})
 	})
 
-	test('all blogs are returned', async () => {
-		const res = await api.get('/api/blogs')
+	describe('viewing a specific blog', () => {
+		test('blog uid property named id', async () => {
+			const res = await helper.blogsInDb()
 
-		expect(res.body).toHaveLength(helper.initialBlogs.length)
+			res.forEach((blog) => {
+				expect(blog.id).toBeDefined()
+				expect(blog._id).not.toBeDefined()
+			})
+		})
 	})
 
-	test('blog uid property named id', async () => {
-		const res = await api.get('/api/blogs')
+	describe('addition of a new blog', () => {
+		test('succeeds with valid data', async () => {
+			const newBlog = {
+				title: 'New blog test',
+				author: 'Jest test',
+				url: 'www.wbr!.com',
+				likes: 3
+			}
 
-		res.body.forEach((blog) => {
-			expect(blog.id).toBeDefined()
-			expect(blog._id).not.toBeDefined()
+			await api
+				.post('/api/blogs')
+				.send(newBlog)
+				.expect(201)
+				.expect('Content-Type', /application\/json/)
+
+			const blogsAtEnd = await helper.blogsInDb()
+			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+
+			const blogsFiltered = blogsAtEnd.map(({ title, author, url, likes }) => {
+				return { title, author, url, likes }
+			})
+			expect(blogsFiltered).toContainEqual(newBlog)
 		})
 	})
 
