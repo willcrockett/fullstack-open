@@ -61,6 +61,18 @@ describe('when there is initially some saved blogs', () => {
 			})
 			expect(blogsFiltered).toContainEqual(newBlog)
 		})
+
+		test('like default value 0', async () => {
+			const newBlog = {
+				title: 'New blog test',
+				author: 'Jest test',
+				url: 'www.wbr!.com'
+			}
+
+			const res = await api.post('/api/blogs').send(newBlog)
+
+			expect(res.body).toHaveProperty('likes', 0)
+		})
 	})
 
 	afterAll(async () => {
