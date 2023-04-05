@@ -73,6 +73,32 @@ describe('when there is initially some saved blogs', () => {
 
 			expect(res.body).toHaveProperty('likes', 0)
 		})
+
+		test('fails with status code 400 if no url', async () => {
+			const noUrlBlog = {
+				title: 'New blog test',
+				author: 'Jest test',
+				likes: 3
+			}
+
+			await api.post('/api/blogs').send(noUrlBlog).expect(400)
+
+			const blogsAtEnd = await helper.blogsInDb()
+			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+		})
+
+		test('fails with status code 400 if no title', async () => {
+			const noTitleBlog = {
+				author: 'Jest test',
+				url: 'www.wbr!.com',
+				likes: 3
+			}
+
+			await api.post('/api/blogs').send(noTitleBlog).expect(400)
+
+			const blogsAtEnd = await helper.blogsInDb()
+			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+		})
 	})
 
 	afterAll(async () => {
