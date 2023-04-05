@@ -113,7 +113,24 @@ describe('when there is initially some saved blogs', () => {
 			expect(blogsAtEnd).not.toContainEqual(blogToDelete)
 		})
 	})
+	describe('updating a blog', () => {
+		test('should succeed with status 200 if valid data', async () => {
+			const blogsAtStart = await helper.blogsInDb()
+			const blogToUpdate = blogsAtStart[0]
+			let updatedBlog = { ...blogToUpdate }
+			updatedBlog.likes += 1
 
+			await api
+				.put(`/api/blogs/${blogToUpdate.id}`)
+				.send(updatedBlog)
+				.expect(200)
+
+			const blogsAtEnd = await helper.blogsInDb()
+			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+			expect(blogsAtEnd).not.toContainEqual(blogToUpdate)
+			expect(blogsAtEnd).toContainEqual(updatedBlog)
+		})
+	})
 	afterAll(async () => {
 		await mongoose.connection.close()
 	})
