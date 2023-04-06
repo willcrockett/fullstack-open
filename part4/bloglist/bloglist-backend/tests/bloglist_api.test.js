@@ -146,7 +146,7 @@ describe('when there is initially one user at db', () => {
 	})
 
 	test('should succeed when creating with fresh username', async () => {
-		const usersAtStart = helper.usersInDb()
+		const usersAtStart = await helper.usersInDb()
 
 		const newUser = {
 			username: 'newuser',
@@ -160,7 +160,7 @@ describe('when there is initially one user at db', () => {
 			.expect(201)
 			.expect('Content-Type', /application\/json/)
 
-		const usersAtEnd = helper.usersInDb()
+		const usersAtEnd = await helper.usersInDb()
 		expect(usersAtEnd).toHaveLength(usersAtStart.length + 1)
 
 		const usernames = usersAtEnd.map((u) => u.username)

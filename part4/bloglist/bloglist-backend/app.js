@@ -7,9 +7,8 @@ const mongoose = require('mongoose')
 require('express-async-errors')
 
 const blogRouter = require('./controllers/blogs')
-/**
- * TODO: 4.15: Implement a way to create new users by doing an HTTP POST request to address api/users. Users have a username, password and name.
- */
+const userRouter = require('./controllers/users')
+
 const middleware = require('./utils/middleware')
 
 mongoose.set('strictQuery', false)
@@ -25,6 +24,7 @@ app.use(express.json())
 app.use(middleware.requestLogger)
 
 app.use('/api/blogs', blogRouter)
+app.use('/api/users', userRouter)
 
 app.use(middleware.unknownEndpoint)
 app.use(middleware.errorHandler)
