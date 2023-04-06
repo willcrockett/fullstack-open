@@ -147,7 +147,6 @@ describe('when there is initially one user at db', () => {
 
 	test('should succeed when creating with fresh username', async () => {
 		const usersAtStart = await helper.usersInDb()
-
 		const newUser = {
 			username: 'newuser',
 			name: 'New User',
@@ -165,6 +164,26 @@ describe('when there is initially one user at db', () => {
 
 		const usernames = usersAtEnd.map((u) => u.username)
 		expect(usernames).toContain(newUser.username)
+	})
+
+	test.only('should 400 when username is taken', async () => {
+		const usersAtStart = await helper.usersInDb()
+		const badUser = {
+			username: 'root',
+			name: 'bad user',
+			password: 'baduserpass'
+		}
+
+		const res = await api
+			.post('/api/users')
+			.send(badUser)
+			.expect(400)
+			.expect('Content-Type', /application\/json/)
+
+		expect(res.body.error).toContain('expected username to be unique')
+
+		const usersAtEnd = await helper.usersInDb()
+		expect(usersAtEnd).toHaveLength(usersAtStart.length)
 	})
 })
 
