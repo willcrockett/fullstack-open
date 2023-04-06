@@ -7,5 +7,10 @@
 			"path": "../common/common-backend"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.ignoreWords": [
+			"secretpass",
+			"toremove"
+		]
+	}
 }
