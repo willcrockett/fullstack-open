@@ -42,5 +42,15 @@
 	"jest": {
 		"testEnvironment": "node",
 		"globalTeardown": "./tests/teardown.js"
+	},
+	"eslintConfig": {
+		"rules": {
+			"no-unused-vars": [
+				"error",
+				{
+					"argsIgnorePattern": "next"
+				}
+			]
+		}
 	}
 }
