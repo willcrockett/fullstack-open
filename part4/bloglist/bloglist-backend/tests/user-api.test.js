@@ -5,7 +5,7 @@ const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 const User = require('../models/user')
-// TODO add mongoose and blog model imports for future tests
+
 describe('when there is initially one user at db', () => {
 	beforeEach(async () => {
 		await User.deleteMany({})

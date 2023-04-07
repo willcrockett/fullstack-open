@@ -1,15 +1,23 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
+const User = require('../models/user')
+const logger = require('../utils/logger')
 /* ----------------------------- Fetch all blogs ---------------------------- */
 blogRouter.get('/', async (req, res) => {
-	const blogs = await Blog.find({})
+	const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
 	res.json(blogs)
 })
 
 /* ------------------------------ Add new blog ------------------------------ */
 blogRouter.post('/', async (req, res) => {
 	const blog = new Blog(req.body)
+
+	const user = await User.findById('642f7141cf56dc6138b42d9e') // TODO replace with token
+	blog.user = user._id
+
 	const savedBlog = await blog.save()
+	user.blogs = user.blogs.concat(savedBlog._id)
+	await user.save()
 	res.status(201).json(savedBlog)
 })
 

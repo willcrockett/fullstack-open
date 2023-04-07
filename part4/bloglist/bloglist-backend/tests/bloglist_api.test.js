@@ -1,12 +1,10 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
-const bcrypt = require('bcrypt')
 
 const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
-const User = require('../models/user')
 
 describe('when there is initially some saved blogs', () => {
 	beforeEach(async () => {
