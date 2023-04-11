@@ -1,15 +1,24 @@
 const mongoose = require('mongoose')
 const supertest = require('supertest')
+const bcrypt = require('bcrypt')
 
 const helper = require('./test_helper')
 const app = require('../app')
 const api = supertest(app)
 const Blog = require('../models/blog')
-
+const User = require('../models/user')
+const logger = require('../utils/logger')
 describe('when there is initially some saved blogs', () => {
 	beforeEach(async () => {
 		await Blog.deleteMany({})
 		await Blog.insertMany(helper.initialBlogs)
+
+		await User.deleteMany({})
+
+		const passwordHash = await bcrypt.hash('secretpass', 10)
+		const user = new User({ username: 'root', name: 'root user', passwordHash })
+
+		await user.save()
 	})
 
 	describe('viewing all blogs', () => {
@@ -38,97 +47,121 @@ describe('when there is initially some saved blogs', () => {
 		})
 	})
 
-	describe('addition of a new blog', () => {
-		test('succeeds with valid data', async () => {
-			const newBlog = {
-				title: 'New blog test',
-				author: 'Jest test',
-				url: 'www.wbr!.com',
-				likes: 3
-			}
+	describe('when there is a logged in user', () => {
+		describe('addition of a new blog', () => {
+			var token
+			beforeAll(async () => {
+				const rootUser = {
+					username: 'root',
+					password: 'secretpass'
+				}
 
-			await api
-				.post('/api/blogs')
-				.send(newBlog)
-				.expect(201)
-				.expect('Content-Type', /application\/json/)
+				let res = await api.post('/api/login').send(rootUser)
 
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
-
-			const blogsFiltered = blogsAtEnd.map(({ title, author, url, likes }) => {
-				return { title, author, url, likes }
+				token = res.body.token
 			})
-			expect(blogsFiltered).toContainEqual(newBlog)
+
+			test('succeeds with valid data', async () => {
+				const newBlog = {
+					title: 'New blog test',
+					author: 'Jest test',
+					url: 'www.wbr!.com',
+					likes: 3
+				}
+
+				await api
+					.post('/api/blogs')
+					.send(newBlog)
+					.set('Authorization', 'Bearer ' + token)
+					.expect(201)
+					.expect('Content-Type', /application\/json/)
+
+				const blogsAtEnd = await helper.blogsInDb()
+				expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
+
+				const blogsFiltered = blogsAtEnd.map(
+					({ title, author, url, likes }) => {
+						return { title, author, url, likes }
+					}
+				)
+				expect(blogsFiltered).toContainEqual(newBlog)
+			})
+
+			test('like default value 0', async () => {
+				const newBlog = {
+					title: 'New blog test',
+					author: 'Jest test',
+					url: 'www.wbr!.com'
+				}
+
+				const res = await api
+					.post('/api/blogs')
+					.send(newBlog)
+					.set('Authorization', 'Bearer ' + token)
+
+				expect(res.body).toHaveProperty('likes', 0)
+			})
+
+			test('fails with status code 400 if no url', async () => {
+				const noUrlBlog = {
+					title: 'New blog test',
+					author: 'Jest test',
+					likes: 3
+				}
+
+				await api
+					.post('/api/blogs')
+					.send(noUrlBlog)
+					.expect(400)
+					.set('Authorization', 'Bearer ' + token)
+
+				const blogsAtEnd = await helper.blogsInDb()
+				expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+			}, 100000)
+
+			test('fails with status code 400 if no title', async () => {
+				const noTitleBlog = {
+					author: 'Jest test',
+					url: 'www.wbr!.com',
+					likes: 3
+				}
+
+				await api.post('/api/blogs').send(noTitleBlog).expect(400)
+
+				const blogsAtEnd = await helper.blogsInDb()
+				expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+			})
 		})
 
-		test('like default value 0', async () => {
-			const newBlog = {
-				title: 'New blog test',
-				author: 'Jest test',
-				url: 'www.wbr!.com'
-			}
+		describe('deletion of a blog', () => {
+			test('succeeds with status code 204 if id is valid', async () => {
+				const blogsAtStart = await helper.blogsInDb()
+				const blogToDelete = blogsAtStart[0]
 
-			const res = await api.post('/api/blogs').send(newBlog)
+				await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
 
-			expect(res.body).toHaveProperty('likes', 0)
+				const blogsAtEnd = await helper.blogsInDb()
+				expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
+				expect(blogsAtEnd).not.toContainEqual(blogToDelete)
+			})
 		})
+		describe('updating a blog', () => {
+			test('should succeed with status 200 if valid data', async () => {
+				const blogsAtStart = await helper.blogsInDb()
+				const blogToUpdate = blogsAtStart[0]
+				let updatedBlog = { ...blogToUpdate }
+				updatedBlog.likes += 1
 
-		test('fails with status code 400 if no url', async () => {
-			const noUrlBlog = {
-				title: 'New blog test',
-				author: 'Jest test',
-				likes: 3
-			}
+				await api
+					.put(`/api/blogs/${blogToUpdate.id}`)
+					.send(updatedBlog)
+					.expect(200)
 
-			await api.post('/api/blogs').send(noUrlBlog).expect(400)
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-		})
-
-		test('fails with status code 400 if no title', async () => {
-			const noTitleBlog = {
-				author: 'Jest test',
-				url: 'www.wbr!.com',
-				likes: 3
-			}
-
-			await api.post('/api/blogs').send(noTitleBlog).expect(400)
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-		})
-	})
-
-	describe('deletion of a blog', () => {
-		test('succeeds with status code 204 if id is valid', async () => {
-			const blogsAtStart = await helper.blogsInDb()
-			const blogToDelete = blogsAtStart[0]
-
-			await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
-			expect(blogsAtEnd).not.toContainEqual(blogToDelete)
-		})
-	})
-	describe('updating a blog', () => {
-		test('should succeed with status 200 if valid data', async () => {
-			const blogsAtStart = await helper.blogsInDb()
-			const blogToUpdate = blogsAtStart[0]
-			let updatedBlog = { ...blogToUpdate }
-			updatedBlog.likes += 1
-
-			await api
-				.put(`/api/blogs/${blogToUpdate.id}`)
-				.send(updatedBlog)
-				.expect(200)
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-			expect(blogsAtEnd).not.toContainEqual(blogToUpdate)
-			expect(blogsAtEnd).toContainEqual(updatedBlog)
+				const blogsAtEnd = await helper.blogsInDb()
+				expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
+				expect(blogsAtEnd).not.toContainEqual(blogToUpdate)
+				expect(blogsAtEnd).toContainEqual(updatedBlog)
+			})
 		})
 	})
 })
