@@ -11,7 +11,7 @@ describe('when there is initially one user at db', () => {
 		await User.deleteMany({})
 
 		const passwordHash = await bcrypt.hash('secretpass', 10)
-		const user = new User({ username: 'root', passwordHash })
+		const user = new User({ username: 'root', name: 'root user', passwordHash })
 
 		await user.save()
 	})
@@ -141,5 +141,52 @@ describe('when there is initially one user at db', () => {
 
 		const usersAtEnd = await helper.usersInDb()
 		expect(usersAtEnd).toHaveLength(usersAtStart.length)
+	})
+
+	describe('handling logins', () => {
+		test('should succeed with proper token on good login', async () => {
+			const user = {
+				username: 'root',
+				password: 'secretpass'
+			}
+
+			await api
+				.post('/api/login')
+				.send(user)
+				.expect(200)
+				.expect('Content-Type', /application\/json/)
+
+			// TODO: implement testing the token returned
+		})
+
+		test('should fail with proper status and error on bad password', async () => {
+			const user = {
+				username: 'root',
+				password: 'badsecretpass'
+			}
+
+			const res = await api
+				.post('/api/login')
+				.send(user)
+				.expect(401)
+				.expect('Content-Type', /application\/json/)
+
+			expect(res.body.error).toEqual('invalid username and/or password')
+		})
+
+		test('should fail with proper status and error on bad username', async () => {
+			const user = {
+				username: 'badroot',
+				password: 'secretpass'
+			}
+
+			const res = await api
+				.post('/api/login')
+				.send(user)
+				.expect(401)
+				.expect('Content-Type', /application\/json/)
+
+			expect(res.body.error).toEqual('invalid username and/or password')
+		})
 	})
 })
