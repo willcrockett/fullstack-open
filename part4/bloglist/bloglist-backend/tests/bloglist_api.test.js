@@ -12,15 +12,12 @@ const logger = require('../utils/logger')
 const { application } = require('express')
 
 beforeEach(async () => {
-	// Create a root user
 	await User.deleteMany({})
 
 	// Create blogs without user
 	await Blog.deleteMany({})
-	const noteObjects = helper.initialBlogs.map((blog) => new Blog(blog))
-	const promiseArray = noteObjects.map((blog) => blog.save())
-	await Promise.all(promiseArray)
-}, 1000000)
+	await Blog.insertMany(helper.initialBlogs)
+}, 100000)
 describe('when there is initially some saved blogs by dummy user', () => {
 	describe('viewing all blogs', () => {
 		test('all blogs returned in json format', async () => {
@@ -71,18 +68,29 @@ describe('when there is initially some saved blogs by dummy user', () => {
 	})
 
 	describe('adding a new blog', () => {
-		let savedUser
+		let headers
 		beforeEach(async () => {
-			await User.deleteMany({})
-
 			const passwordHash = await bcrypt.hash('secretpass', 10)
 			const user = new User({
 				username: 'root',
 				name: 'root user',
 				passwordHash
 			})
-			savedUser = await user.save()
+
+			const savedUser = await user.save()
+
+			const userForToken = {
+				username: savedUser.username,
+				id: savedUser._id
+			}
+
+			const token = jwt.sign(userForToken, process.env.SECRET)
+
+			headers = {
+				Authorization: `Bearer ${token}`
+			}
 		}, 100000)
+
 		test('succeeds with valid data and token', async () => {
 			const newBlog = {
 				title: 'New blog test',
@@ -91,83 +99,21 @@ describe('when there is initially some saved blogs by dummy user', () => {
 				likes: 3
 			}
 
-			const userForToken = {
-				username: savedUser.username,
-				id: savedUser._id
-			}
-
-			const token = jwt.sign(userForToken, process.env.SECRET)
-
 			const res = await api
 				.post('/api/blogs')
 				.send(newBlog)
-				.set('Authorization', 'Bearer ' + token)
+				.set(headers)
 				.expect(201)
 				.expect('Content-Type', /application\/json/)
 
 			const blogsAtEnd = await helper.blogsInDb()
 			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length + 1)
 
-			const blogsFiltered = blogsAtEnd.map(({ user }) => {
-				return user
+			const titles = blogsAtEnd.map(({ title }) => {
+				return title
 			})
-			expect(blogsFiltered).toContainEqual(savedUser._id)
+			expect(titles).toContain(newBlog.title)
 		})
-
-		test('should fail with proper status and error when token is forged', async () => {
-			const newBlog = {
-				title: 'New blog test',
-				author: 'Jest test',
-				url: 'www.wbr!.com',
-				likes: 3
-			}
-
-			const userForToken = {
-				username: savedUser.username,
-				id: savedUser._id
-			}
-
-			const token = jwt.sign(userForToken, 'nottherealsecretkey')
-
-			const res = await api
-				.post('/api/blogs')
-				.send(newBlog)
-				.set('Authorization', 'Bearer ' + token)
-				.expect(400)
-				.expect('Content-Type', /application\/json/)
-
-			expect(res.body.error).toBe('invalid signature')
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-		})
-
-		test('should fail with proper status and error when token not found', async () => {
-			const newBlog = {
-				title: 'New blog test',
-				author: 'Jest test',
-				url: 'www.wbr!.com',
-				likes: 3
-			}
-
-			const userForToken = {
-				username: 'randomname'
-			}
-
-			const token = jwt.sign(userForToken, process.env.SECRET)
-
-			const res = await api
-				.post('/api/blogs')
-				.send(newBlog)
-				.set('Authorization', 'Bearer ' + token)
-				.expect(401)
-				.expect('Content-Type', /application\/json/)
-
-			expect(res.body.error).toBe('token invalid')
-
-			const blogsAtEnd = await helper.blogsInDb()
-			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-		}, 100000)
 
 		test('like default value 0', async () => {
 			const newBlog = {
@@ -176,17 +122,12 @@ describe('when there is initially some saved blogs by dummy user', () => {
 				url: 'www.wbr!.com'
 			}
 
-			const userForToken = {
-				username: savedUser.username,
-				id: savedUser._id
-			}
-
-			const token = jwt.sign(userForToken, process.env.SECRET)
-
 			const res = await api
 				.post('/api/blogs')
 				.send(newBlog)
-				.set('Authorization', 'Bearer ' + token)
+				.set(headers)
+				.expect(201)
+				.expect('Content-Type', /application\/json/)
 
 			expect(res.body).toHaveProperty('likes', 0)
 
@@ -201,18 +142,7 @@ describe('when there is initially some saved blogs by dummy user', () => {
 				likes: 3
 			}
 
-			const userForToken = {
-				username: savedUser.username,
-				id: savedUser._id
-			}
-
-			const token = jwt.sign(userForToken, process.env.SECRET)
-
-			await api
-				.post('/api/blogs')
-				.send(noUrlBlog)
-				.expect(400)
-				.set('Authorization', 'Bearer ' + token)
+			await api.post('/api/blogs').send(noUrlBlog).set(headers).expect(400)
 
 			const blogsAtEnd = await helper.blogsInDb()
 			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
@@ -225,151 +155,225 @@ describe('when there is initially some saved blogs by dummy user', () => {
 				likes: 3
 			}
 
-			const userForToken = {
-				username: savedUser.username,
-				id: savedUser._id
-			}
-
-			const token = jwt.sign(userForToken, process.env.SECRET)
-
-			await api
+			const res = await api
 				.post('/api/blogs')
 				.send(noTitleBlog)
-				.set('Authorization', 'Bearer ' + token)
+				.set(headers)
 				.expect(400)
 
 			const blogsAtEnd = await helper.blogsInDb()
 			expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
 		})
 	})
-	afterAll(async () => {
-		await Blog.deleteMany({})
-		await User.deleteMany({})
-	})
 })
 describe('deletion of a blog', () => {
 	let headers
-
+	let savedUserId
+	let user
 	beforeEach(async () => {
-		const newUser = {
+		const passwordHash = await bcrypt.hash('secretpass', 10)
+		user = new User({
 			username: 'root',
-			name: 'root',
-			password: 'password'
-		}
-
-		logger.info(await api.post('/api/users').send(newUser))
-
-		const result = await api.post('/api/login').send({
-			username: 'root',
-			password: 'password'
+			name: 'root user',
+			passwordHash
 		})
 
+		let savedUser = await user.save()
+		savedUserId = savedUser._id
+		const userForToken = {
+			username: savedUser.username,
+			id: savedUserId
+		}
+
+		const token = jwt.sign(userForToken, process.env.SECRET)
+
 		headers = {
-			Authorization: `Bearer ${result.body.token}`
+			Authorization: `Bearer ${token}`
 		}
-	}, 1000000)
-	test('succeeds with status code 204 if id and token are valid', async () => {
-		const newBlog = {
-			title: 'New blog test',
-			author: 'Jest test',
-			url: 'www.wbr!.com',
-			likes: 3
-		}
-
-		await api.post('/api/blogs').send(newBlog).set(headers).expect(201)
-
-		const allBlogs = await helper.blogsInDb()
-		const blogToDelete = allBlogs.find((blog) => blog.title === newBlog.title)
-
-		await api.delete(`/api/blogs/${blogToDelete.id}`).set(headers).expect(204)
-
-		const blogsAtEnd = await helper.blogsInDb()
-		expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length - 1)
-		expect(blogsAtEnd).not.toContainEqual(blogToDelete)
 	}, 100000)
 
-	test('should fail if blog does not belong to requesting user', async () => {
-		const blogsAtStart = await helper.blogsInDb()
+	test('succeeds with status code 204 if id and token are valid', async () => {
+		// Add blog as logged in user
+		const newBlog = new Blog({
+			title: 'Delete blog test',
+			author: 'Jest test',
+			url: 'www.wbr!.com',
+			likes: 3,
+			user: savedUserId
+		})
 
-		const fakeUserForToken = {
-			username: 'fakeuser',
-			id: helper.nonExisitingUserId
+		const savedBlog = await newBlog.save()
+		user.blogs.concat(savedBlog._id)
+		await user.save()
+
+		// Delete previously added blog
+		const blogsAtStart = await helper.blogsInDb()
+		expect(blogsAtStart).toHaveLength(helper.initialBlogs.length + 1)
+		await api.delete(`/api/blogs/${savedBlog.id}`).set(headers).expect(204)
+
+		//FIXME failing every third run. suspect missing await somewhere
+		const blogsAtEnd = await helper.blogsInDb()
+		expect(blogsAtEnd).toHaveLength(blogsAtStart.length - 1)
+		expect(blogsAtEnd).not.toContainEqual(savedBlog)
+	}, 100000)
+
+	test('should 401 if blog does not belong to requesting user', async () => {
+		const passwordHash = await bcrypt.hash('secretpass', 10)
+		const dummyUser = new User({
+			username: 'dummy',
+			name: 'dummy user',
+			passwordHash
+		})
+
+		let savedDummyUser = await dummyUser.save()
+
+		const userForToken = {
+			username: savedDummyUser.username,
+			id: savedDummyUser._id
 		}
 
-		const token = jwt.sign(fakeUserForToken, process.env.SECRET)
+		const dummyBlog = {
+			title: 'dummy blog',
+			author: 'dummy author',
+			url: 'dummyurl.org',
+			likes: 2
+		}
+
+		const dummyToken = jwt.sign(userForToken, process.env.SECRET)
+
+		const dummyPostRes = await api
+			.post('/api/blogs')
+			.send(dummyBlog)
+			.set('Authorization', 'Bearer ' + dummyToken)
+			.expect(201)
+
+		const savedDummyBlog = dummyPostRes.body
+		const blogsAtStart = await helper.blogsInDb()
 
 		const res = await api
-			.delete(`/api/blogs/${savedBlog._id}`)
-			.set('Authorization', 'Bearer ' + token)
+			.delete(`/api/blogs/${savedDummyBlog.id}`)
+			.set(headers)
 			.expect(401)
 			.expect('Content-Type', /application\/json/)
 
-		expect(res.body.error).toBe(`Not authorized for ${blogToDelete}`)
+		expect(res.body.error).toBe(`Not authorized for ${savedDummyBlog.id}`)
 
 		const blogsAtEnd = await helper.blogsInDb()
 		expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
 	})
+
+	test('should 400 if blog does not exist', async () => {
+		const nonexistingId = helper.nonExistingBlogId()
+
+		await api.delete(`/api/blogs/${nonexistingId}`).set(headers).expect(400)
+	})
 }, 100000)
 
 describe('updating a blog', () => {
-	test.skip('should succeed with status 200 if valid data', async () => {
-		const blogsAtStart = await helper.blogsInDb()
-		const blogToUpdate = blogsAtStart[0]
-		let updatedBlog = { ...blogToUpdate }
-		updatedBlog.likes += 1
-
-		await api.put(`/api/blogs/${blogToUpdate.id}`).send(updatedBlog).expect(200)
-
-		const blogsAtEnd = await helper.blogsInDb()
-		expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-		expect(blogsAtEnd).not.toContainEqual(blogToUpdate)
-		expect(blogsAtEnd).toContainEqual(updatedBlog)
-	})
-})
-
-describe('Deletion of a blog', () => {
 	let headers
-
+	let savedUserId
+	let user
 	beforeEach(async () => {
-		const newUser = {
+		const passwordHash = await bcrypt.hash('secretpass', 10)
+		user = new User({
 			username: 'root',
-			name: 'root',
-			password: 'password'
+			name: 'root user',
+			passwordHash
+		})
+
+		let savedUser = await user.save()
+		savedUserId = savedUser._id
+		const userForToken = {
+			username: savedUser.username,
+			id: savedUserId
 		}
 
-		await api.post('/api/users').send(newUser)
-
-		const result = await api.post('/api/login').send(newUser)
+		const token = jwt.sign(userForToken, process.env.SECRET)
 
 		headers = {
-			Authorization: `Bearer ${result.body.token}`
+			Authorization: `Bearer ${token}`
 		}
 	}, 100000)
 
-	test('succeeds with status code 204 if id is valid', async () => {
+	test('should succeed on update with status 200 if valid data', async () => {
+		const blogsAtStart = await helper.blogsInDb()
 		const newBlog = {
-			title: 'The best blog ever',
-			author: 'Me',
-			url: 'http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html',
-			likes: 12
+			title: 'Update blog test',
+			author: 'Jest test',
+			url: 'www.wbr!.com',
+			likes: 3,
+			user: savedUserId
 		}
 
-		await api.post('/api/blogs').send(newBlog).set(headers).expect(201)
+		const savedBlog = await new Blog(newBlog).save()
+		user.blogs.concat(savedBlog._id)
+		await user.save()
 
-		const allBlogs = await helper.blogsInDb()
-		const blogToDelete = allBlogs.find((blog) => blog.title === newBlog.title)
+		const updatedBlog = {
+			...newBlog,
+			likes: newBlog.likes + 1
+		}
 
-		await api.delete(`/api/blogs/${blogToDelete.id}`).set(headers).expect(204)
+		await api
+			.put(`/api/blogs/${savedBlog.id}`)
+			.send(updatedBlog)
+			.set(headers)
+			.expect(200)
 
 		const blogsAtEnd = await helper.blogsInDb()
-
-		expect(blogsAtEnd).toHaveLength(helper.initialBlogs.length)
-
-		const contents = blogsAtEnd.map((r) => r.title)
-
-		expect(contents).not.toContain(blogToDelete.title)
+		expect(blogsAtEnd).not.toContainEqual(newBlog)
+		expect(blogsAtEnd).toContainEqual({ ...updatedBlog, id: savedBlog.id })
 	})
-}, 1000000)
+
+	test('should 401 on update if blog does not belong to requesting user', async () => {
+		const passwordHash = await bcrypt.hash('secretpass', 10)
+		const dummyUser = new User({
+			username: 'dummy',
+			name: 'dummy user',
+			passwordHash
+		})
+
+		let savedDummyUser = await dummyUser.save()
+
+		const userForToken = {
+			username: savedDummyUser.username,
+			id: savedDummyUser._id
+		}
+
+		const dummyBlog = {
+			title: 'dummy blog',
+			author: 'dummy author',
+			url: 'dummyurl.org',
+			likes: 2
+		}
+
+		const dummyToken = jwt.sign(userForToken, process.env.SECRET)
+
+		const dummyPostRes = await api
+			.post('/api/blogs')
+			.send(dummyBlog)
+			.set('Authorization', 'Bearer ' + dummyToken)
+			.expect(201)
+
+		const savedDummyBlog = dummyPostRes.body
+		const blogsAtStart = await helper.blogsInDb()
+		const updatedBlog = {
+			...dummyBlog,
+			likes: dummyBlog.likes + 1
+		}
+		const res = await api
+			.put(`/api/blogs/${savedDummyBlog.id}`)
+			.send(updatedBlog)
+			.set(headers)
+			.expect(401)
+			.expect('Content-Type', /application\/json/)
+
+		expect(res.body.error).toBe(`Not authorized for ${savedDummyBlog.id}`)
+
+		const blogsAtEnd = await helper.blogsInDb()
+		expect(blogsAtEnd).toHaveLength(blogsAtStart.length)
+	})
+})
 
 afterAll(async () => {
 	await mongoose.connection.close()

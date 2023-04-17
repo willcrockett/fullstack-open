@@ -59,27 +59,30 @@ blogRouter.delete('/:id', async (req, res, next) => {
 	const decodedToken = jwt.verify(req.token, process.env.SECRET)
 
 	const blog = await Blog.findById(req.params.id)
-	if (
-		!decodedToken.id ||
-		blog.user.toString() !== decodedToken._id.toString()
-	) {
+	if (!decodedToken.id || blog.user.toString() !== decodedToken.id.toString()) {
 		return res.status(401).json({ error: `Not authorized for ${blog.id}` })
 	}
 
 	const user = User.findById(decodedToken.id)
-	blog.remove()
+	await blog.remove()
 	res.status(204).end()
 })
 
 blogRouter.put('/:id', async (req, res, next) => {
+	const decodedToken = jwt.verify(req.token, process.env.SECRET)
+
+	const blog = await Blog.findById(req.params.id)
+	if (!decodedToken.id || blog.user.toString() !== decodedToken.id.toString()) {
+		return res.status(401).json({ error: `Not authorized for ${blog.id}` })
+	}
 	const body = req.body
-	const blog = {
+	const updatedBlog = {
 		title: body.title,
 		author: body.author,
 		url: body.url,
 		likes: body.likes
 	}
-	await Blog.findByIdAndUpdate(req.params.id, blog, { new: true })
+	await Blog.findByIdAndUpdate(req.params.id, updatedBlog, { new: true })
 	res.status(200).json(body)
 })
 module.exports = blogRouter
