@@ -36,7 +36,7 @@ blogRouter.post('/', async (req, res) => {
 	if (!decodedToken.id) {
 		return res.status(401).json({ error: 'token invalid' })
 	}
-
+	//TODO add user extractor middleware
 	const user = await User.findById(decodedToken.id)
 
 	const blog = new Blog({
@@ -63,7 +63,8 @@ blogRouter.delete('/:id', async (req, res, next) => {
 		return res.status(401).json({ error: `Not authorized for ${blog.id}` })
 	}
 
-	const user = User.findById(decodedToken.id)
+	//TODO add user extractor middleware
+	//const user = User.findById(decodedToken.id)
 	await blog.remove()
 	res.status(204).end()
 })
