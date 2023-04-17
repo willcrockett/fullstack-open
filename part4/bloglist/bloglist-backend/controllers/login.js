@@ -4,7 +4,7 @@ const loginRouter = require('express').Router()
 const User = require('../models/user')
 
 loginRouter.post('/', async (req, res) => {
-	const { username, password } = req.body
+	const { username, password, ...rest } = req.body
 	const user = await User.findOne({ username })
 	const passwordCorrect =
 		user === null ? false : await bcrypt.compare(password, user.passwordHash)
@@ -22,7 +22,9 @@ loginRouter.post('/', async (req, res) => {
 
 	const token = jwt.sign(userForToken, process.env.SECRET)
 
-	res.status(200).send({ token, username: user.username, name: user.name })
+	return res
+		.status(200)
+		.send({ token, username: user.username, name: user.name })
 })
 
 module.exports = loginRouter

@@ -1,5 +1,7 @@
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const bcrypt = require('bcrypt')
+
 const initialBlogs = [
 	{
 		_id: '5a422a851b54a676234d17f7',
@@ -51,12 +53,25 @@ const initialBlogs = [
 	}
 ]
 
-const nonExistingId = async () => {
+const nonExistingBlogId = async () => {
 	const blog = new Blog({ title: 'willremovethissoon', url: 'toremove.com' })
 	await blog.save()
 	await blog.remove()
 
 	return blog._id.toString()
+}
+
+const nonExisitingUserId = async () => {
+	const passwordHash = await bcrypt.hash('dummypass', 10)
+	const user = new User({
+		username: 'dummy',
+		name: 'dummy user',
+		passwordHash
+	})
+	await user.save()
+	await user.remove()
+
+	return user._id.toString()
 }
 
 const blogsInDb = async () => {
@@ -70,7 +85,8 @@ const usersInDb = async () => {
 }
 
 module.exports = {
-	nonExistingId,
+	nonExistingBlogId,
+	nonExisitingUserId,
 	initialBlogs,
 	blogsInDb,
 	usersInDb
