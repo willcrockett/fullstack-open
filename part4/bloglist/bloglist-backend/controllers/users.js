@@ -19,7 +19,7 @@ userRouter.post('/', async (req, res) => {
 		res.status(400).json({ error: '`password` is required' })
 	} else if (password.length < 3) {
 		res.status(400).json({
-			error: `(\`${password}\`) is shorter than the minimum allowed length (3)`
+			error: '`password` is shorter than the minimum allowed length (3)'
 		})
 	}
 	const passwordHash = await bcrypt.hash(password, 10)

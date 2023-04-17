@@ -27,6 +27,7 @@
     "nodemon": "^2.0.22"
   },
   "jest": {
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "modulePathIgnorePatterns": ["old_tests"]
   }
 }

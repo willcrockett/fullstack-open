@@ -2,6 +2,7 @@ const blogRouter = require('express').Router()
 const jwt = require('jsonwebtoken')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const { userExtractor, tokenExtractor } = require('../utils/middleware')
 //const logger = require('../utils/logger')
 
 // const getTokenFrom = (req) => {
@@ -29,15 +30,15 @@ blogRouter.get('/:id', async (req, res, next) => {
 })
 
 /* ------------------------------ Add new blog ------------------------------ */
-blogRouter.post('/', async (req, res) => {
+blogRouter.post('/', userExtractor, async (req, res) => {
 	const body = req.body
-	const decodedToken = jwt.verify(req.token, process.env.SECRET)
 
-	if (!decodedToken.id) {
-		return res.status(401).json({ error: 'token invalid' })
-	}
 	//TODO add user extractor middleware
-	const user = await User.findById(decodedToken.id)
+	const user = req.user
+
+	if (!user) {
+		return res.status(401).json({ error: 'operation not permitted' })
+	}
 
 	const blog = new Blog({
 		title: body.title,
@@ -55,35 +56,28 @@ blogRouter.post('/', async (req, res) => {
 })
 
 /* ------------------------------ Delete a blog ----------------------------- */
-blogRouter.delete('/:id', async (req, res, next) => {
-	const decodedToken = jwt.verify(req.token, process.env.SECRET)
-
+blogRouter.delete('/:id', userExtractor, async (req, res, next) => {
+	const user = req.user
 	const blog = await Blog.findById(req.params.id)
-	if (!decodedToken.id || blog.user.toString() !== decodedToken.id.toString()) {
-		return res.status(401).json({ error: `Not authorized for ${blog.id}` })
-	}
 
-	//TODO add user extractor middleware
-	//const user = User.findById(decodedToken.id)
+	if (!user || user.id.toString() !== blog.user.toString()) {
+		return res.status(401).json({ error: 'operation not permitted' })
+	}
+	user.blogs = user.blogs.filter((b) => b.toString() !== blog.id.toString())
+	await user.save()
 	await blog.remove()
 	res.status(204).end()
 })
 
 blogRouter.put('/:id', async (req, res, next) => {
-	const decodedToken = jwt.verify(req.token, process.env.SECRET)
+	// const decodedToken = jwt.verify(req.token, process.env.SECRET)
 
-	const blog = await Blog.findById(req.params.id)
-	if (!decodedToken.id || blog.user.toString() !== decodedToken.id.toString()) {
-		return res.status(401).json({ error: `Not authorized for ${blog.id}` })
-	}
-	const body = req.body
-	const updatedBlog = {
-		title: body.title,
-		author: body.author,
-		url: body.url,
-		likes: body.likes
-	}
+	// const blog = await Blog.findById(req.params.id)
+	// if (!decodedToken.id || blog.user.toString() !== decodedToken.id.toString()) {
+	// 	return res.status(401).json({ error: `Not authorized for ${blog.id}` })
+	// }
+	const updatedBlog = { ...req.body }
 	await Blog.findByIdAndUpdate(req.params.id, updatedBlog, { new: true })
-	res.status(200).json(body)
+	res.status(200).json(updatedBlog)
 })
 module.exports = blogRouter
