@@ -52,5 +52,6 @@
 				}
 			]
 		}
-	}
+	},
+	"proxy": "http://localhost:3003"
 }
