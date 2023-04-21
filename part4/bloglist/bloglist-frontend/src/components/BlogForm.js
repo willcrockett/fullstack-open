@@ -32,7 +32,9 @@ const BlogForm = ({ handleLogout, user }) => {
 		e.preventDefault()
 		try {
 			const newBlog = await blogService.create(blogFields)
+			debugger
 			setBlogFields({...initialState})
+			
 			setBlogs(blogs.concat(newBlog))
 		} catch (exception) {
 			
@@ -65,7 +67,7 @@ const BlogForm = ({ handleLogout, user }) => {
 					<input 
 						type="text"
 						name="url"
-						value={blogFields.urrl}
+						value={blogFields.url}
 						onChange={handleChange}
 					/>
 				</li>

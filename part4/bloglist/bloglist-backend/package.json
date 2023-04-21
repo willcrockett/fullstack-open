@@ -53,5 +53,5 @@
 			]
 		}
 	},
-	"proxy": "http://localhost:3003"
+	"proxy": "http://localhost:30033"
 }
