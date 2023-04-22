@@ -2,15 +2,14 @@
 import { useState, useEffect } from 'react'
 import blogService from '../services/blogs'
 import Blog from './Blog'
-
-const BlogForm = ({ handleLogout, user }) => {
+const BlogForm = ({ setAlert, changeUser }) => {
 	const [blogs, setBlogs] = useState([])
 	const initialState = {
 		title: '',
     author: '',
     url: '' 
 	}
-	const [blogFields, setBlogFields] = useState(initialState)
+	const [fields, setFields] = useState(initialState)
 
 	useEffect(() => {
     blogService.getAll().then(blogs =>
@@ -18,10 +17,11 @@ const BlogForm = ({ handleLogout, user }) => {
     )  
   }, [])
 
+	
 	const handleChange = (e) => {
 		const { name, value } = e.target
 		
-		setBlogFields((prevState) => ({
+		setFields((prevState) => ({
 				...prevState,
 				[name]: value
 			})
@@ -31,16 +31,18 @@ const BlogForm = ({ handleLogout, user }) => {
 	const handleCreate = async (e) => {
 		e.preventDefault()
 		try {
-			const newBlog = await blogService.create(blogFields)
-			debugger
-			setBlogFields({...initialState})
-			
+			const newBlog = await blogService.create(fields)
+			setFields({...initialState})	
 			setBlogs(blogs.concat(newBlog))
-		} catch (exception) {
-			
+			setAlert(`${newBlog.title} by ${newBlog.author} succesfully added`)
+		} catch (e) {
+			setAlert('problem with create')
+			setTimeout(() => {
+				setAlert(null)
+			}, 5000);
 		}
 	}
-	return (
+	return ( 	
 		<div>
 			<h2>create new</h2>
 			<form onSubmit={handleCreate}>
@@ -49,7 +51,7 @@ const BlogForm = ({ handleLogout, user }) => {
 					<input 
 						type="text"
 						name="title"
-						value={blogFields.title}
+						value={fields.title}
 						onChange={handleChange}
 					/>
 				</li>
@@ -58,7 +60,7 @@ const BlogForm = ({ handleLogout, user }) => {
 					<input 
 						type="text"
 						name="author"
-						value={blogFields.author}
+						value={fields.author}
 						onChange={handleChange}
 					/>
 				</li>
@@ -67,7 +69,7 @@ const BlogForm = ({ handleLogout, user }) => {
 					<input 
 						type="text"
 						name="url"
-						value={blogFields.url}
+						value={fields.url}
 						onChange={handleChange}
 					/>
 				</li>
