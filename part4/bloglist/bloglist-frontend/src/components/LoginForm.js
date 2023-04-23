@@ -10,12 +10,13 @@ const LoginForm = ({ changeUser }) => {
     e.preventDefault()
     try {
       const user = await loginService.login(fields)
-      console.log(user)
+      console.log(`loginform handleLogin`)
       
       window.localStorage.setItem(
         'loggedBloglistUser', JSON.stringify(user)
       )
       setFields({...initialState})
+			changeUser(user)
     } catch (exception) {
       
     }

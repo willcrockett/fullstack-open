@@ -26,6 +26,8 @@ const App = () => {
 
   const changeUser = (u) => {
     debugger
+    console.log(`change user: ${u}`)
+    
     setUser({...u})
   }
 
