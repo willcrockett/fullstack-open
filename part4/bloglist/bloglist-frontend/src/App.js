@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import BlogForm from './components/BlogForm'
-import loginService from './services/login'
 import blogService from './services/blogs'
 import LoginForm from './components/LoginForm'
 
@@ -16,14 +15,7 @@ const App = () => {
       setUser(user)      
       blogService.setToken(user.token)    
   }}, [])
-
   
-  
-  const handleLogout = async (event) => {
-    window.localStorage.removeItem('loggedBloglistUser')
-    setUser(null)
-  }
-
   const changeUser = (u) => {
     debugger
     console.log(`change user: ${u}`)
@@ -34,12 +26,8 @@ const App = () => {
   const renderBlogs = () => {
     return (
       <div>
-        <h2>blogs</h2>
-        <form onSubmit={handleLogout}>
-          {user.name} logged in {' '}
-          <button type="submit">logout</button>
-        </form>
-        <BlogForm changeUser={changeUser}/>
+     
+        <BlogForm changeUser={changeUser} username={user.name}/>
       </div>
     )
   }
