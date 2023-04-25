@@ -33,6 +33,7 @@ const App = () => {
   
   const addBlog = async (b) => {
     const savedBlog = await blogService.create(b)
+    savedBlog.user = user
     setBlogs(blogs.concat(savedBlog))
     notify(`${savedBlog.title} by ${savedBlog.author} succesfully created`, 'success')
   }
