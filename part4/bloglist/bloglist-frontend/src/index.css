@@ -20,8 +20,8 @@ h1 {
 }
 
 .success {
-  color: rgb(17, 255, 0);
-  background: lightgrey;
+  color: rgb(0, 128, 0);
+   background: lightgrey;
   font-size: 20px;
   border-style: solid;
   border-radius: 5px;

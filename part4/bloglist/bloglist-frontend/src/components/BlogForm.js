@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 import blogService from '../services/blogs'
 import Blog from './Blog'
-const BlogForm = ({ setAlert, changeUser, username }) => {
+const BlogForm = ({ notify, changeUser, username }) => {
 	const [blogs, setBlogs] = useState([])
 	const initialState = {
 		title: '',
@@ -34,12 +34,9 @@ const BlogForm = ({ setAlert, changeUser, username }) => {
 			const newBlog = await blogService.create(fields)
 			setFields({...initialState})	
 			setBlogs(blogs.concat(newBlog))
-			setAlert(`${newBlog.title} by ${newBlog.author} succesfully added`)
+			notify(`${newBlog.title} by ${newBlog.author} succesfully added`, 'success')
 		} catch (e) {
-			setAlert('problem with create')
-			setTimeout(() => {
-				setAlert(null)
-			}, 5000);
+			notify('unexpected create problem', 'error')
 		}
 	}
 
