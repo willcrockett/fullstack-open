@@ -2,8 +2,9 @@
 import { useState } from 'react'
 const BlogForm = ({ addBlog }) => {
 	const initialFields = {
-		username: '',
-		password: ''
+		title: '',
+		author: '',
+		url: ''
 	}
 	const [fields, setFields] = useState(initialFields)
 	
@@ -17,7 +18,7 @@ const BlogForm = ({ addBlog }) => {
 		)
 	}
 
-	const handleCreate = async (e) => {
+	const handleCreate = (e) => {
 		e.preventDefault()
 		addBlog(fields)
 		setFields({...initialFields})

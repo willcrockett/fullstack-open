@@ -18,7 +18,11 @@ const LoginForm = ({ login }) => {
 	const handleLogin = (e) => {
 		e.preventDefault()
 		login(fields)
-		setFields({...initialFields})
+		setFields({
+			...initialFields
+		})
+
+
 	}
 	return (
 		<form onSubmit={handleLogin}>
