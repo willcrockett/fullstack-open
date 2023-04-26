@@ -41,7 +41,6 @@ const App = () => {
   }
 
   const updateBlog = async (blog) => {
-    console.log(blog)
     try {
       const savedBlog = await blogService.update(blog.id, blog)
       console.log(`update blog: ${savedBlog}`)
@@ -50,7 +49,15 @@ const App = () => {
     } catch {
       notify('update error', 'error')
     }
+  }
 
+  const removeBlog = async (id) => {
+    try {
+      await blogService.remove(id)
+      setBlogs(blogs.filter((b) => b.id !== id))
+    } catch {
+      notify('remove error', 'error')
+    }
   }
 
   /* ------------------------------ User Handlers ----------------------------- */
@@ -103,7 +110,13 @@ const App = () => {
         </Toggleable>
         <br></br>
         {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} update={updateBlog} />
+        <Blog key={blog.id} 
+          blog={blog} 
+          update={updateBlog} 
+          remove={removeBlog} 
+          curr_username={user.username}
+          />
+
       )}
       </div>
     )
