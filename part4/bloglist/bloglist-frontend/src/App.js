@@ -89,7 +89,7 @@ const App = () => {
       setAlert(null)
     }, 5000)
   }
-
+  blogs.sort((b1, b2) => b2.likes - b1.likes)
   const renderBlogs = () => {
     return (
       <div>
