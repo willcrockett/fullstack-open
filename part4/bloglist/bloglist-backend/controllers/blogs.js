@@ -77,7 +77,9 @@ blogRouter.put('/:id', async (req, res, next) => {
 	// 	return res.status(401).json({ error: `Not authorized for ${blog.id}` })
 	// }
 	const updatedBlog = { ...req.body }
-	await Blog.findByIdAndUpdate(req.params.id, updatedBlog, { new: true })
+	await Blog.findByIdAndUpdate(req.params.id, updatedBlog, {
+		new: true
+	}).populate('user', { username: 1, name: 1 })
 	res.status(200).json(updatedBlog)
 })
 module.exports = blogRouter

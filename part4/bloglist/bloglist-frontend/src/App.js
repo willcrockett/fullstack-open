@@ -7,10 +7,12 @@ import LoginForm from './components/LoginForm'
 import Notification from './components/Notification'
 import Toggleable from './components/Toggleable'
 const App = () => {
+  /* ------------------------------- State Hooks ------------------------------ */
 	const [blogs, setBlogs] = useState([])
   const [user, setUser] = useState(null)
   const [alert, setAlert] = useState(null)
   const blogFormRef = useRef()
+  /* ------------------------------ Effect Hooks ------------------------------ */
 	useEffect(() => {
     blogService.getAll().then(blogs =>
       setBlogs( blogs )
@@ -28,23 +30,30 @@ const App = () => {
   } else {
     setUser(null)
   }
-}, [])
+  }, [])
   
-  
-  const addBlog = async (b) => {
-    const savedBlog = await blogService.create(b)
+ /* ------------------------------ Blog Handlers ----------------------------- */
+  const addBlog = async (blog) => {
+    const savedBlog = await blogService.create(blog)
     savedBlog.user = user
     setBlogs(blogs.concat(savedBlog))
     notify(`${savedBlog.title} by ${savedBlog.author} succesfully created`, 'success')
   }
 
-  const notify = (message, type) => {
-    setAlert({ message, type })
-    setTimeout(() => {
-      setAlert(null)
-    }, 5000)
+  const updateBlog = async (blog) => {
+    console.log(blog)
+    try {
+      const savedBlog = await blogService.update(blog.id, blog)
+      console.log(`update blog: ${savedBlog}`)
+      
+      setBlogs(blogs.map(b => b.id !== blog.id ? b : savedBlog))
+    } catch {
+      notify('update error', 'error')
+    }
+
   }
-  
+
+  /* ------------------------------ User Handlers ----------------------------- */
 	const login = async (u) => {
 			
     console.log(`app handleLogin`)
@@ -72,6 +81,14 @@ const App = () => {
 			console.log('probmlem with loggint out')
 		}
 	}
+  /* ---------------------------- Rendering Helpers --------------------------- */
+  
+  const notify = (message, type) => {
+    setAlert({ message, type })
+    setTimeout(() => {
+      setAlert(null)
+    }, 5000)
+  }
 
   const renderBlogs = () => {
     return (
@@ -86,7 +103,7 @@ const App = () => {
         </Toggleable>
         <br></br>
         {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
+        <Blog key={blog.id} blog={blog} update={updateBlog} />
       )}
       </div>
     )
